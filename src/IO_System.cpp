@@ -7,7 +7,7 @@
 
 
 
-bool IO_System::OneMoreStep(float Min, float Max, float Step, int N)
+bool IO_System::isOneMoreStep(float Min, float Max, float Step, int N)
 {
     bool res = true;
     float f = Min + N*Step;
@@ -30,19 +30,130 @@ bool IO_System::OneMoreStep(float Min, float Max, float Step, int N)
 }
 
 
+void IO_System::CalcWorkRange(const char Axis)
+{
+    if(Axis == 'X')
+    {
+        WorkRangeX.clear();
+        int index = 0;
+        int i = IndexRanges.first.start;
+        for(; i < IndexRanges.first.end; i++)
+        {
+            // Check onto x(i) != x(i+1)
+            if(index < SizeX)
+            {
+                WorkRangeX.push_back(Range.first.Min + Range.first.Step*(i+1));
+                index++;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if(OneMoreStepX.isNeed && index < SizeX)
+        {
+            WorkRangeX.push_back(Range.first.Max);
+            OneMoreStepX.isCheck = true;
+            IndexRanges.first.start = IndexRanges.first.end;
+        }
+        else
+        {
+            IndexRanges.first.start = i;
+        }
+    }
+    else if(Axis == 'Y')
+    {
+        WorkRangeY.clear();
+        int index = 0;
+        int i = IndexRanges.second.start;
+        for(; i < IndexRanges.second.end; i++)
+        {
+            if(index < SizeY)
+            {
+                WorkRangeY.push_back(Range.second.Min + Range.second.Step*(i+1));
+                index++;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if(OneMoreStepY.isNeed && index < SizeY)
+        {
+            WorkRangeY.push_back(Range.second.Max);
+            IndexRanges.second.start = IndexRanges.second.end;
+            OneMoreStepY.isCheck = true;
+        }
+        else
+        {
+            IndexRanges.second.start = i;
+        }
+    }
+}
+
+void IO_System::PrintDel()
+{
+    std::string del = "--------------";
+    output << std::endl;
+
+    for(int i = 0; i <= WorkRangeX.size(); i++)
+    {
+        output << del;
+    }
+
+    output << std::endl;
+
+}
+
+void IO_System::BuildPageTable()
+{
+
+    // Setings for format output
+    output.setf(std::ios::scientific);
+    output.setf(std::ios::showpos);
+    output.precision(3);
+    PrintDel();
+    output << "|    y/x     |";
+    for(int i = 0; i < WorkRangeX.size(); i++)
+    {
+        output << "| " << WorkRangeX[i] << " |";
+    }
+
+    PrintDel();
+
+
+    for(int i = 0; i < WorkRangeY.size(); i++)
+    {
+        output << "| " << WorkRangeY[i] << " |";
+        for(int j = 0; j < WorkRangeX.size(); j++)
+        {
+            float res = TestFunction(WorkRangeX[j], WorkRangeY[i]);
+            if(isinff(res)) output << "|  Infinity  |";
+            else output << "| " << res << " |";
+        }
+        PrintDel();
+    }
+
+    output << "\n\n\n";
+
+    
+
+}
 
 void IO_System::Load_data()
 {
     input >> Range.first.Min >> Range.first.Max >> Range.first.Step >> Range.second.Min >> Range.second.Max >> Range.second.Step;
     // Validate data
     // Calc Index Range for X and Y
-    DataPreprocessor(Range, Index);
+    DataPreprocessor(Range, IndexRanges);
 }
 
 
 
 /* Public section  */
-IO_System::IO_System(std::string in, std::string out)
+IO_System::IO_System(std::string in, std::string out, int SizeX, int SizeY):SizeX(SizeX), SizeY(SizeY)
 {
     output.open(out); // Open the file for print Table
     input.open(in); // Open for Load Data
@@ -55,15 +166,80 @@ IO_System::IO_System(std::string in, std::string out)
         output.close();
     }
 
+    // Check size of the built table
+    if(SizeX <= 0 || SizeY <= 0)
+    {
+        std::cout << "Error Size of table\n";
+        exit(-1);
+    }
     
     Load_data(); // Load data and validate
+
+    OneMoreStepX.isNeed = isOneMoreStep(Range.first.Min, Range.first.Max, Range.first.Step, IndexRanges.first.end);
+    OneMoreStepY.isNeed = isOneMoreStep(Range.second.Min, Range.second.Max, Range.second.Step, IndexRanges.second.end);
+    OneMoreStepX.isCheck = false;
+    OneMoreStepY.isCheck = false;
+
 }
+
+float IO_System::TestFunction(float x, float y)
+{   
+    return 1/sinf((x+y)/float(180.0)*M_PI);
+}
+
+
+ void IO_System::BuildTable()
+ {
+ 
+    while(IndexRanges.second.start != IndexRanges.second.end)
+    {
+        CalcWorkRange('Y');
+        IndexRanges.first.start = -1;
+        OneMoreStepX.isCheck = false;
+        while(IndexRanges.first.start != IndexRanges.first.end)
+        {
+            CalcWorkRange('X');
+            BuildPageTable();
+        }
+
+        if(OneMoreStepX.isNeed && !OneMoreStepX.isCheck)
+        {
+            WorkRangeX.clear();
+            WorkRangeX.push_back(Range.first.Max);
+            BuildPageTable();
+        }
+    }
+
+    if(OneMoreStepY.isNeed && !OneMoreStepY.isCheck)
+    {
+        WorkRangeY.clear();
+        WorkRangeY.push_back(Range.second.Max);
+        
+        IndexRanges.first.start = -1;
+        OneMoreStepX.isCheck = false;
+        while(IndexRanges.first.start != IndexRanges.first.end)
+        {
+            CalcWorkRange('X');
+            BuildPageTable();
+        }
+
+        if(OneMoreStepX.isNeed && !OneMoreStepX.isCheck)
+        {
+            WorkRangeX.clear();
+            WorkRangeX.push_back(Range.first.Max);
+            BuildPageTable();
+        }
+    }
+
+
+
+ }
 
 
 void IO_System::GetIndex()
 {
-    std::cout << "X = [ " << 0 << "; " << Index.first << "]" << std::endl;
-    std::cout << "Y = [ " << 0 << "; " << Index.second << "]" << std::endl; 
+    std::cout << "X = [ " << IndexRanges.first.start << "; " << IndexRanges.first.end << "]" << std::endl;
+    std::cout << "Y = [ " << IndexRanges.second.start << "; " << IndexRanges.second.end << "]" << std::endl; 
 }
 void IO_System::GetRange()
 {

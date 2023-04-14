@@ -11,9 +11,11 @@ int main()
     // Open file for write
     // Load Range and Validate Data
     // Calc number of steps between minimum and maximum 
-    IO_System io("in.txt", "table.txt"); 
+    IO_System io("in.txt", "table.txt", 7, 10); 
 
-    
+    io.BuildTable();
+
+
 
     return 0;
 }

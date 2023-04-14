@@ -4,7 +4,7 @@
 #include <cmath>
 
 
-DataPreprocessor::DataPreprocessor(std::pair<Data, Data> &data, std::pair<int, int> &Index) 
+DataPreprocessor::DataPreprocessor(std::pair<Data, Data> &data, std::pair<IndexRange, IndexRange> &Index) 
 {  
 
     if(Validate(data))
@@ -30,13 +30,15 @@ bool DataPreprocessor::Validate(std::pair<Data, Data> &data)
 }
 
 
-void DataPreprocessor::Preparetion_data(std::pair<Data, Data> &data, std::pair<int, int> &Index)
+void DataPreprocessor::Preparetion_data(std::pair<Data, Data> &data, std::pair<IndexRange, IndexRange> &Index)
 {
 
-    Index.first = int(fabs(data.first.Max - data.first.Min)/data.first.Step);
-    Index.second = int(fabs(data.second.Max - data.second.Min)/data.second.Step);
+    Index.first.start = -1;
+    Index.second.start = -1;
+    Index.first.end = int(fabs(data.first.Max - data.first.Min)/data.first.Step);
+    Index.second.end = int(fabs(data.second.Max - data.second.Min)/data.second.Step);
 
-    if(Index.first > MaxRange || Index.second > MaxRange || Index.first*Index.second > MaxRange)
+    if(Index.first.end > MaxRange || Index.second.end > MaxRange || Index.first.end*Index.second.end > MaxRange)
     {
         throw "Big range Overflow!";
         exit(-1);

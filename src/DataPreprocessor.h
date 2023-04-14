@@ -8,11 +8,11 @@ class DataPreprocessor
 
     private:
         bool Validate(std::pair<Data, Data> &data);
-        void Preparetion_data(std::pair<Data, Data> &data, std::pair<int, int> &Index);
+        void Preparetion_data(std::pair<Data, Data> &data,std::pair<IndexRange, IndexRange> &Index);
 
 public:
     DataPreprocessor(const DataPreprocessor&) = delete;
-    DataPreprocessor(std::pair<Data, Data> &data, std::pair<int, int> &Index);
+    DataPreprocessor(std::pair<Data, Data> &data, std::pair<IndexRange, IndexRange> &Index);
 
     DataPreprocessor& operator=(const DataPreprocessor&) = delete;
 

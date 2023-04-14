@@ -10,5 +10,17 @@ struct Data
     float Step;
 };
 
+struct IndexRange
+{
+    int start;
+    int end;
+};
+
+struct OneMoreStep
+{
+    bool isNeed;
+    bool isCheck;
+};
+
 // Max size of range
 const int MaxRange = 2.25e+8;
