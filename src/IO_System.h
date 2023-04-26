@@ -20,6 +20,8 @@ private:
     std::vector<float> WorkRangeY;
     OneMoreStep OneMoreStepX;
     OneMoreStep OneMoreStepY;
+    float Y_prev;
+    float X_prev;
 
     std::string in;   
     std::string out;
@@ -38,6 +40,9 @@ private:
 
     bool isOneMoreStep(float Min, float Max, float Step, int N); // is one more step needed
     void Load_data(); // Load data from file and validate that. Uses validate class
+
+    float Add(float Min, float Step, int M);
+    bool Compair(float x, float y);
     
 public:
 

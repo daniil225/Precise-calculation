@@ -2,9 +2,32 @@
 #include "DataPreprocessor.h"
 #include <iostream>
 #include <cmath>
+#include <sstream>
 
 /*  Private section */
 
+
+float IO_System::Add(float Min, float Step, int M)
+{
+    return 0.0;
+}
+
+bool IO_System::Compair(float x, float y)
+{
+    std::string str_x;
+    std::string str_y;
+    std::stringstream ss;
+    // Settings for print 
+    ss.setf(std::ios::scientific);
+    ss.setf(std::ios::showpos);
+    ss.precision(3);
+
+    // Convert float -> string 
+    ss << x << " " << y;
+    ss >> str_x >> str_y;
+    // Compair
+    return str_x == str_y;
+}
 
 
 bool IO_System::isOneMoreStep(float Min, float Max, float Step, int N)
@@ -64,6 +87,7 @@ void IO_System::CalcWorkRange(const char Axis)
     }
     else if(Axis == 'Y')
     {
+        float curY;
         WorkRangeY.clear();
         int index = 0;
         int i = IndexRanges.second.start;
@@ -71,25 +95,36 @@ void IO_System::CalcWorkRange(const char Axis)
         {
             if(index < SizeY)
             {
-                WorkRangeY.push_back(Range.second.Min + Range.second.Step*(i+1));
-                index++;
+                curY = Range.second.Min + Range.second.Step*(i+1);
+                if(!Compair(curY, Y_prev)) 
+                {
+                    WorkRangeY.push_back(curY);
+                    index++;
+                    Y_prev = curY;
+                }
             }
             else
             {
                 break;
             }
         }
-
-        if(OneMoreStepY.isNeed && index < SizeY)
+        
+        if(!Compair(curY, Range.second.Max))
         {
-            WorkRangeY.push_back(Range.second.Max);
-            IndexRanges.second.start = IndexRanges.second.end;
-            OneMoreStepY.isCheck = true;
+            if(OneMoreStepY.isNeed && index < SizeY)
+            {
+                WorkRangeY.push_back(Range.second.Max);
+                IndexRanges.second.start = IndexRanges.second.end;
+                OneMoreStepY.isCheck = true;
+            }
         }
         else
         {
-            IndexRanges.second.start = i;
+            std::cout << "roehf";
+            OneMoreStepY.isCheck = true;
         }
+
+        IndexRanges.second.start = i;
     }
 }
 
@@ -180,11 +215,16 @@ IO_System::IO_System(std::string in, std::string out, int SizeX, int SizeY):Size
     OneMoreStepX.isCheck = false;
     OneMoreStepY.isCheck = false;
 
+    // set value for build table
+    X_prev = Range.first.Min;
+    Y_prev = Range.second.Min;
 }
 
 float IO_System::TestFunction(float x, float y)
 {   
+    //return tanf((x+y)/float(180.0)*M_PI);
     return 1/sinf((x+y)/float(180.0)*M_PI);
+    //return 1/cosf((x+y)/float(180.0)*M_PI);
 }
 
 
